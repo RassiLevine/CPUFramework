@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,7 +25,31 @@ namespace CPUFramework
             cmd.CommandText = sqlstatement;
             var dr = cmd.ExecuteReader();
             dt.Load(dr);
+
+            AllowColumnNull(dt);
             return dt;
+        }
+        public static void ExecuteSQL(string sqlstatement)
+        {
+            GetDataTable(sqlstatement);
+        }
+        
+        private static void AllowColumnNull(DataTable dt)
+        {
+            foreach(DataColumn c in dt.Columns)
+            {
+                c.AllowDBNull = true;
+            }
+        }
+        public static void DebugPrintDataTable(DataTable dt)
+        {
+            foreach(DataRow r in dt.Rows)
+            {
+                foreach(DataColumn c in dt.Columns)
+                {
+                    Debug.Print(c.ColumnName + "=" + r[c.ColumnName].ToString());
+                }
+            }
         }
     }
 }
