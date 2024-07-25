@@ -7,58 +7,119 @@ namespace CPUFramework
 {
     public class SQLutility
     {
-        public static string ConnectionString = "";
-        public static DataTable GetDataTable(string sqlstatement)
-        {
-            Debug.Print(sqlstatement);
-            DataTable dt = new();
-            SqlConnection conn = new();
-            conn.ConnectionString = ConnectionString;
-            conn.Open();
-            //DisplayMessage("connection status", conn.State.ToString());
-            var cmd = new SqlCommand();
-            cmd.Connection = conn;
-            cmd.CommandText = sqlstatement;
-            var dr = cmd.ExecuteReader();
-            dt.Load(dr);
-            AllowColumnNull(dt);
+     public static string ConnectionString = "";
 
-            return dt;
-        }
-        public static void ExecuteSQL(string sqlstatement)
-        {
-            GetDataTable(sqlstatement);
-        }
-        
-        private static void AllowColumnNull(DataTable dt)
-        {
-            foreach(DataColumn c in dt.Columns)
+            public static SqlCommand GetSqlCommand(string sprocname)
             {
-                c.AllowDBNull = true;
+                SqlCommand cmd;
+                using (SqlConnection conn = new SqlConnection(SQLutility.ConnectionString))
+                {
+                    cmd = new SqlCommand(sprocname, conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    conn.Open();
+                    SqlCommandBuilder.DeriveParameters(cmd);
+                }
+                return cmd;
             }
-        }
+
+            public static DataTable GetDataTable(SqlCommand cmd)
+            {
+               //ebug.Print("-----" + Environment.NewLine + cmd.CommandText);
+                DataTable dt = new();
+                using (SqlConnection conn = new SqlConnection(SQLutility.ConnectionString))
+                {
+                    conn.Open();
+                    cmd.Connection = conn;
+                Debug.Print(GetSql(cmd));
+                SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                }
+                AllowColumnNull(dt);
+                return dt;
+            }
+            public static DataTable GetDataTable(string sqlstatement)
+            {
+
+                return GetDataTable(new SqlCommand(sqlstatement));
+            }
+            public static void ExecuteSQL(string sqlstatement)
+            {
+                GetDataTable(sqlstatement);
+            }
+
+            public static int GetFirstRowFirstColumn(string sql)
+            {
+                int n = 0;
+
+                DataTable dt = GetDataTable(sql);
+                if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
+                {
+                    if (dt.Rows[0][0] != DBNull.Value)
+                    {
+
+                        int.TryParse(dt.Rows[0][0].ToString(), out n);
+                    }
+                }
+                return n;
+            }
+            private static void AllowColumnNull(DataTable dt)
+            {
+                foreach (DataColumn c in dt.Columns)
+                {
+                    c.AllowDBNull = true;
+                }
+            }
 
         public static string GetSql(SqlCommand cmd)
         {
             string val = "";
-           StringBuilder sb = new StringBuilder();
-            if(cmd.Connection != null)
+#if Debug
+            StringBuilder sb = new StringBuilder();
+            int paramcount = cmd.Parameters.Count - 1;
+            int paramnum = 0;
+            string comma = ",";
+            if (cmd.Connection != null)
             {
-                sb.AppendLine(cmd.Connection.DataSource);
-                sb.AppendLine(cmd.Connection.Database);
+                sb.AppendLine($"--{cmd.Connection.DataSource}");
+                sb.AppendLine($"use {cmd.Connection.Database}");
+                sb.AppendLine("go");
+            }
+            if (cmd.CommandType == CommandType.StoredProcedure)
+            {
+                sb.AppendLine($"exec {cmd.CommandText}");
+                foreach (SqlParameter p in cmd.Parameters)
+                {
+                    if (p.Direction != ParameterDirection.ReturnValue)
+                    {
+                        
+                        if (paramnum == paramcount)
+                        {
+                            comma = "";
+                        }
+                        sb.AppendLine($"{p.ParameterName} = {(p.Value == null ? "null" : p.Value.ToString())}{comma}");
+                    }
+                    paramnum++;
+                }
+            }
+             
+            else
+            {
+                sb.AppendLine(cmd.CommandText);
             }
             val = sb.ToString();
+#endif
             return val;
         }
+
         public static void DebugPrintDataTable(DataTable dt)
-        {
-            foreach(DataRow r in dt.Rows)
             {
-                foreach(DataColumn c in dt.Columns)
+                foreach (DataRow r in dt.Rows)
                 {
-                    Debug.Print(c.ColumnName + "=" + r[c.ColumnName].ToString());
+                    foreach (DataColumn c in dt.Columns)
+                    {
+                        Debug.Print(c.ColumnName + "=" + r[c.ColumnName].ToString());
+                    }
                 }
             }
         }
     }
-}
