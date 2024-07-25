@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Text;
 
 namespace CPUFramework
 {
@@ -9,6 +10,7 @@ namespace CPUFramework
         public static string ConnectionString = "";
         public static DataTable GetDataTable(string sqlstatement)
         {
+            Debug.Print(sqlstatement);
             DataTable dt = new();
             SqlConnection conn = new();
             conn.ConnectionString = ConnectionString;
@@ -34,6 +36,19 @@ namespace CPUFramework
             {
                 c.AllowDBNull = true;
             }
+        }
+
+        public static string GetSql(SqlCommand cmd)
+        {
+            string val = "";
+           StringBuilder sb = new StringBuilder();
+            if(cmd.Connection != null)
+            {
+                sb.AppendLine(cmd.Connection.DataSource);
+                sb.AppendLine(cmd.Connection.Database);
+            }
+            val = sb.ToString();
+            return val;
         }
         public static void DebugPrintDataTable(DataTable dt)
         {
