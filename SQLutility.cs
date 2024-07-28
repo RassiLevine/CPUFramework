@@ -6,7 +6,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 
 namespace CPUFramework
-{
+{ 
     public class SQLutility
     {
         public static string ConnectionString = "";
