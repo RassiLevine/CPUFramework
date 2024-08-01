@@ -22,7 +22,11 @@ namespace CPUFramework
             return cmd;
         }
 
-        public static DataTable GetDataTable(SqlCommand cmd)
+        public  static DataTable GetDataTable(SqlCommand cmd)
+        {
+            return DoExecuetSql(cmd, true);
+        }
+        private static DataTable DoExecuetSql(SqlCommand cmd, bool loadtable)
         {
             Debug.Print("-----" + Environment.NewLine +cmd.CommandText);
             DataTable dt = new();
@@ -33,12 +37,19 @@ namespace CPUFramework
                 try
                 {
                     SqlDataReader dr = cmd.ExecuteReader();
-                    dt.Load(dr);
+                    if (loadtable == true)
+                    {
+                        dt.Load(dr);
+                    }
                 }
                 catch (SqlException ex)
                 {
                     string msg = ParseConstraintMessage(ex.Message);
                     throw new Exception(msg);
+                }
+                catch (InvalidCastException ex)
+                {
+                    throw new Exception(cmd.CommandText + ": " + ex.Message);
                 }
             }
             AllowColumnNull(dt);
@@ -47,13 +58,29 @@ namespace CPUFramework
         public static DataTable GetDataTable(string sqlstatement)
         {
            
-            return GetDataTable(new SqlCommand(sqlstatement));
+            return DoExecuetSql(new SqlCommand(sqlstatement), true);
         }
         public static void ExecuteSQL(string sqlstatement)
         {
             GetDataTable(sqlstatement);
         }
-        
+
+        public static void ExecuteSQL(SqlCommand cmd)
+        {
+            GetDataTable(cmd);
+        }
+
+        public static void SetParamValue(SqlCommand cmd, string paramname, object value)
+        {
+            try
+            {
+                cmd.Parameters[paramname].Value = value;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(cmd.CommandText + ex.Message,ex);
+            }
+        }
         public static int GetFirstRowFirstColumn(string sql)
         {
             int n = 0;
@@ -150,6 +177,15 @@ namespace CPUFramework
                     msg = msg.Substring(0, pos);
                     msg = msg.Replace("_", " ");
                     msg = msg + msgend;
+
+                    if(prefix == "f_")
+                    {
+                        var words = msg.Split(" ");
+                        if(words.Length > 1)
+                        {
+                            msg = $"cannot delete {words[0]} because it has a related {words[1]} record";
+                        }
+                    }
                 }
             }
             return msg;
