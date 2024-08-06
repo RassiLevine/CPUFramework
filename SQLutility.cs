@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CPUFramework
@@ -26,6 +27,32 @@ namespace CPUFramework
         {
             return DoExecuetSql(cmd, true);
         }
+
+        public static void SaveDataRow(DataRow row, string sprocname)
+        {
+            SqlCommand cmd = GetSqlCommand(sprocname);
+            foreach(DataColumn col in row.Table.Columns)
+            {
+                string paramname = $"@{col.ColumnName}";
+                if (cmd.Parameters.Contains(paramname))
+                {
+                    cmd.Parameters[paramname].Value = row[col.ColumnName];
+                }
+            }
+            DoExecuetSql(cmd, false);
+
+            foreach(SqlParameter p in cmd.Parameters)
+            {
+                if(p.Direction == ParameterDirection.InputOutput)
+                {
+                    string colname = p.ParameterName.Substring(1);
+                    if (row.Table.Columns.Contains(colname))
+                    {
+                        row[colname] = p.Value;
+                    }
+                }
+            }
+        }
         private static DataTable DoExecuetSql(SqlCommand cmd, bool loadtable)
         {
             Debug.Print("-----" + Environment.NewLine +cmd.CommandText);
@@ -37,6 +64,7 @@ namespace CPUFramework
                 try
                 {
                     SqlDataReader dr = cmd.ExecuteReader();
+                    CheckReturnValue(cmd);
                     if (loadtable == true)
                     {
                         dt.Load(dr);
@@ -54,6 +82,41 @@ namespace CPUFramework
             }
             AllowColumnNull(dt);
             return dt;
+        }
+        private static void CheckReturnValue(SqlCommand cmd)
+        {
+            int returnvalue = 0;
+            string msg = "";
+            if (cmd.CommandType == CommandType.StoredProcedure)
+            {
+                foreach (SqlParameter p in cmd.Parameters)
+                {
+                    if (p.Direction == ParameterDirection.ReturnValue)
+                    {
+                        if (p.Value != null)
+                        {
+                            returnvalue = (int)p.Value;
+                        }
+                    }
+                    else if (p.ParameterName.ToLower() == "@message")
+                    {
+                        if (p.Value != null)
+                        {
+                            msg = p.Value.ToString();
+                        }
+                    }
+                }
+                if (returnvalue == 1)
+                {
+                    if (msg == "")
+                    {
+                        msg = @"(cmd.CommandText) did not do action that was requested";
+                    }
+                    throw new Exception(msg);
+                }
+            }
+                    
+            
         }
         public static DataTable GetDataTable(string sqlstatement)
         {
