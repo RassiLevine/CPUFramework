@@ -28,7 +28,16 @@ namespace CPUFramework
             return DoExecuetSql(cmd, true);
         }
 
-        public static void SaveDataRow(DataRow row, string sprocname)
+        public static void SaveDataTable(DataTable dt, string sprocname)
+        {
+           var rows = dt.Select("", "", DataViewRowState.Added | DataViewRowState.ModifiedCurrent);
+            foreach(DataRow r in rows)
+            {
+                SaveDataRow(r, sprocname, false);
+            }
+            dt.AcceptChanges();
+        }
+        public static void SaveDataRow(DataRow row, string sprocname, bool acceptchanges = true)
         {
             SqlCommand cmd = GetSqlCommand(sprocname);
             foreach(DataColumn col in row.Table.Columns)
@@ -51,6 +60,10 @@ namespace CPUFramework
                         row[colname] = p.Value;
                     }
                 }
+            }
+            if(acceptchanges == true)
+            {
+                row.Table.AcceptChanges();
             }
         }
         private static DataTable DoExecuetSql(SqlCommand cmd, bool loadtable)
@@ -80,7 +93,7 @@ namespace CPUFramework
                     throw new Exception(cmd.CommandText + ": " + ex.Message);
                 }
             }
-            AllowColumnNull(dt);
+            SetAllColumnProperites(dt);
             return dt;
         }
         private static void CheckReturnValue(SqlCommand cmd)
@@ -187,12 +200,23 @@ namespace CPUFramework
             }
             return value;
         }
-        private static void AllowColumnNull(DataTable dt)
+        private static void SetAllColumnProperites(DataTable dt)
         {
             foreach (DataColumn c in dt.Columns)
             {
                 c.AllowDBNull = true;
+                c.AutoIncrement = false;
             }
+        }
+
+        public static bool TableHasChanges(DataTable dt)
+        {
+            bool b = false;
+            if(dt.GetChanges() != null)
+            {
+                b = true;
+            }
+            return b;
         }
         public static string GetSql(SqlCommand cmd)
         {
