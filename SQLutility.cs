@@ -48,6 +48,7 @@ namespace CPUFramework
                     cmd.Parameters[paramname].Value = row[col.ColumnName];
                 }
             }
+            
             DoExecuetSql(cmd, false);
 
             foreach(SqlParameter p in cmd.Parameters)
