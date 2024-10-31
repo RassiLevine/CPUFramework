@@ -78,6 +78,10 @@ namespace CPUFramework
                 try
                 {
                     SqlDataReader dr = cmd.ExecuteReader();
+                   string t =  GetSql(cmd);
+
+                    Debug.Print(t);
+
                     CheckReturnValue(cmd);
                     if (loadtable == true)
                     {
