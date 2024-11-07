@@ -1,15 +1,33 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CPUFramework
 {
     public class SQLutility
     {
-        public static string ConnectionString = "";
+        private static string ConnectionString = "";
 
+        public static void SetConnectionString(string connstring, bool tryopen, string userid = "", string password = "")
+        {
+            ConnectionString = connstring;
+            if(userid != "")
+            {
+                SqlConnectionStringBuilder b = new();
+                b.ConnectionString = ConnectionString;
+                b.UserID = userid;
+                b.Password = password;
+                ConnectionString = b.ConnectionString;
+            }
+            if(tryopen == true)
+            {
+                using(SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                }
+            }
+        }
         public static SqlCommand GetSqlCommand(string sprocname)
         {
             SqlCommand cmd;
