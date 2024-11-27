@@ -4,10 +4,11 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Reflection.Metadata.Ecma335;
+using System.Collections.Generic;
 
 namespace CPUFramework
 {
-    public class bizObject : INotifyPropertyChanged
+    public class bizObject<T> : INotifyPropertyChanged where T:bizObject<T>, new()
     {
         string _typename = "";
         string _tablename = "";
@@ -47,6 +48,27 @@ namespace CPUFramework
             }
             _datatable = dt;
             return dt;
+        }
+        public List<T> GetList(bool includeblank = false)
+        {
+            List<T> lst = new();
+            SqlCommand cmd = SQLutility.GetSqlCommand(_getsproc);
+            SQLutility.SetParamValue(cmd, "@All", 1);
+            SQLutility.SetParamValue(cmd, "@IncludeBlank", includeblank);
+            var dt = SQLutility.GetDataTable(cmd);
+            return GetListFromDatatable(dt);
+        }
+       
+        protected List<T> GetListFromDatatable(DataTable dt)
+        {
+            List<T> lst = new();
+            foreach (DataRow dr in dt.Rows)
+            {
+                T obj = new T();
+                obj.LoadProps(dr);
+                lst.Add(obj);
+            }
+            return lst;
         }
 
         private void LoadProps(DataRow dr)
@@ -160,6 +182,7 @@ namespace CPUFramework
                 }
             }
         }
+        protected string GetSprocName { get => _getsproc; }
         protected void InvokePropertyChanged([CallerMemberName] string propertyname = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
