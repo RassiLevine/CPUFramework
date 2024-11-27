@@ -26,7 +26,7 @@ namespace CPUFramework
             _primarykeyname = tablename + "Id";
             _primarykeyparamname = "@" + _primarykeyname;
         }
-        public DataTable LoadPres(int primarykeyvalue)
+        public DataTable Load(int primarykeyvalue)
         {
 
             DataTable dt = new();
