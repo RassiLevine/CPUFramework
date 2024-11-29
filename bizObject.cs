@@ -53,7 +53,11 @@ namespace CPUFramework
         {
             List<T> lst = new();
             SqlCommand cmd = SQLutility.GetSqlCommand(_getsproc);
-            SQLutility.SetParamValue(cmd, "@All", 1);
+            if (cmd.Parameters.Contains("@All"))
+            {
+                SQLutility.SetParamValue(cmd, "@All", 1);
+            }
+            
             if (cmd.Parameters.Contains("@Includeblank"))
             {
                 SQLutility.SetParamValue(cmd, "@IncludeBlank", includeblank);
