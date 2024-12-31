@@ -88,6 +88,7 @@ namespace CPUFramework
 
         public void Delete(int id)
         {
+            this.ErrorMessage = "";
             SqlCommand cmd = SQLutility.GetSqlCommand(_deletesproc);
             SQLutility.SetParamValue(cmd, _primarykeyparamname, id);
             SQLutility.ExecuteSQL(cmd);
@@ -102,6 +103,7 @@ namespace CPUFramework
 
         public void Delete()
         {
+            this.ErrorMessage = "";
             PropertyInfo? prop = GetProp(_primarykeyname, true, false);
             if(prop != null)
             {
@@ -121,6 +123,7 @@ namespace CPUFramework
 
         public void Save()
         {
+            this.ErrorMessage = "";
             SqlCommand cmd = SQLutility.GetSqlCommand(_updatesproc);
             foreach(SqlParameter param in cmd.Parameters)
             {
@@ -146,6 +149,7 @@ namespace CPUFramework
         }
         public  void Save(DataTable datatable)
         {
+            this.ErrorMessage = "";
             if (datatable.Rows.Count == 0)
             {
                 throw new Exception($"cannot call {_tablename} save method, there are no rows in table");
@@ -194,5 +198,6 @@ namespace CPUFramework
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
         }
+        public string ErrorMessage { get; set; } = "";
     }
 }
