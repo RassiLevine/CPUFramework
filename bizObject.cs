@@ -3,8 +3,6 @@ using System.Data;
 using System.Reflection;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Reflection.Metadata.Ecma335;
-using System.Collections.Generic;
 
 namespace CPUFramework
 {
@@ -58,7 +56,7 @@ namespace CPUFramework
                 SQLutility.SetParamValue(cmd, "@All", 1);
             }
             
-            if (cmd.Parameters.Contains("@Includeblank"))
+            if (cmd.Parameters.Contains("@IncludeBlank"))
             {
                 SQLutility.SetParamValue(cmd, "@IncludeBlank", includeblank);
             }
@@ -78,7 +76,7 @@ namespace CPUFramework
             return lst;
         }
 
-        private void LoadProps(DataRow dr)
+        protected void LoadProps(DataRow dr)
         {
             foreach(DataColumn col in dr.Table.Columns)
             {
