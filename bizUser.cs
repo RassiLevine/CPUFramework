@@ -34,7 +34,7 @@ namespace CPUFramework
             }
         }
 
-        public void LoadBySessionKey()
+        public void LoadBySessionKey(string SessionKey)
         {
             SqlCommand cmd = SQLutility.GetSqlCommand("UserGet");
             SQLutility.SetParamValue(cmd, "@sessionkey", SessionKey);
