@@ -328,11 +328,29 @@ namespace CPUFramework
 
                     if(prefix == "f_")
                     {
-                        var words = msg.Split(" ");
-                        if(words.Length > 1)
+                        if (origmsg.ToLower().Contains("delete"))
                         {
-                            msg = $"cannot delete {words[0]} because it has a related {words[1]} record";
+                            var words = msg.Split(" ");
+                            if (words.Length > 1)
+                            {
+                                msg = $"cannot delete {words[0]} because it has a related {words[1]} record";
+                            }
+
                         }
+                        else if (origmsg.ToLower().Contains("insert"))
+                        {
+                            var words = msg.Split(" ");
+                            if (words.Length > 1)
+                            {
+                                Debug.Print(msg);
+                                msg = $"missing foreign reference ${words[0]}";
+                            }
+                        }
+                        else
+                        {
+                            msg = "unkown error";
+                        }
+                      
                     }
                 }
             }
