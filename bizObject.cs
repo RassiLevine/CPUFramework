@@ -3,6 +3,7 @@ using System.Data;
 using System.Reflection;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace CPUFramework
 {
@@ -47,7 +48,7 @@ namespace CPUFramework
             _datatable = dt;
             return dt;
         }
-        public List<T> GetList(bool includeblank = false)
+        public List<T> GetList(bool includeblank = false, int userid = 0)
         {
             List<T> lst = new();
             SqlCommand cmd = SQLutility.GetSqlCommand(_getsproc);
@@ -59,6 +60,10 @@ namespace CPUFramework
             if (cmd.Parameters.Contains("@IncludeBlank"))
             {
                 SQLutility.SetParamValue(cmd, "@IncludeBlank", includeblank);
+            }
+            if (cmd.Parameters.Contains("@UserId"))
+            {
+                SQLutility.SetParamValue(cmd, "@UserId", userid);
             }
             var dt = SQLutility.GetDataTable(cmd);
             return GetListFromDatatable(dt);
@@ -84,14 +89,21 @@ namespace CPUFramework
             }
         }
 
-        public void Delete(int id)
+        public void Delete(int id, int userid = 0)
         {
             this.ErrorMessage = "";
             SqlCommand cmd = SQLutility.GetSqlCommand(_deletesproc);
             SQLutility.SetParamValue(cmd, _primarykeyparamname, id);
+            if (cmd.Parameters.Contains("@UserId"))
+            {
+                SQLutility.SetParamValue(cmd, "@UserId", userid);
+            }
             SQLutility.ExecuteSQL(cmd);
+            
             foreach (SqlParameter param in cmd.Parameters)
             {
+                Debug.WriteLine($"Param: {param.ParameterName}, Direction: {param.Direction}");
+                
                 if (param.Direction == ParameterDirection.InputOutput)
                 {
                     SetProp(param.ParameterName, param.Value);
